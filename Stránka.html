@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Ukážkový e-shop s ručne vyrábanými sviečkami. Frontendová ukážka: produkty, košík, výpočet ceny a dopravy.">
+<title>Zlatý knôt: ukážkový e-shop so sviečkami</title>
+<style>
+:root{--bg:#1B1714;--surface:#26201B;--ink:#F3EBDD;--muted:#B8AC9A;--line:#3B3229;--gold:#C9A24B;--gold-ink:#1B1714;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.0625rem/1.65 Georgia,"Times New Roman",serif}
+h1,h2,h3{font-weight:400;line-height:1.15;margin:0}
+a{color:var(--gold)}
+button{font:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,dialog:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.wrap{max-width:62rem;margin:0 auto;padding:0 1.25rem}
+header.top{position:sticky;top:0;z-index:5;background:rgba(27,23,20,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:.9rem 0}
+.logo{font-size:1.35rem;letter-spacing:.14em;text-transform:uppercase}
+.logo span{color:var(--gold)}
+.cartbtn{background:transparent;color:var(--ink);border:1px solid var(--gold);border-radius:2rem;padding:.45rem 1.1rem;font-family:system-ui,sans-serif;font-size:.95rem}
+.cartbtn b{background:var(--gold);color:var(--gold-ink);border-radius:2rem;padding:0 .55rem;margin-left:.4rem}
+.hero{padding:4rem 0 3.5rem;text-align:center}
+.eyebrow{font:600 .8rem system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0 0 1rem}
+.hero h1{font-size:clamp(2.2rem,7vw,4rem);max-width:16ch;margin:0 auto}
+.hero p{color:var(--muted);max-width:34rem;margin:1.25rem auto 1.75rem}
+.btn{display:inline-block;background:var(--gold);color:var(--gold-ink);border:0;padding:.8rem 1.6rem;border-radius:.3rem;text-decoration:none;font:600 .95rem system-ui,sans-serif;letter-spacing:.04em}
+.perks{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem 2rem;padding:0;margin:0 0 3rem;list-style:none;color:var(--muted);font:.9rem system-ui,sans-serif}
+section.block{padding:3rem 0;border-top:1px solid var(--line)}
+section.block h2{font-size:clamp(1.6rem,4vw,2.2rem);margin-bottom:1.75rem}
+.grid{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:.5rem;overflow:hidden;display:flex;flex-direction:column}
+.pic{display:grid;place-items:center;padding:1.5rem 0 .5rem;background:radial-gradient(circle at 50% 30%,#3A2F25,#26201B 70%)}
+.pic svg{width:6.5rem;height:auto}
+.info{padding:1.1rem 1.25rem 1.4rem;display:flex;flex-direction:column;gap:.4rem;flex:1}
+.info h3{font-size:1.2rem}
+.notes{color:var(--muted);font-size:.95rem;margin:0}
+.meta{color:var(--muted);font:.85rem system-ui,sans-serif}
+.row{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:.8rem}
+.price{font-size:1.2rem}
+.add{background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:.3rem;padding:.45rem .9rem;font:600 .9rem system-ui,sans-serif}
+.add:hover{background:var(--gold);color:var(--gold-ink)}
+.cols{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.cols p{color:var(--muted);margin:.4rem 0 0}
+footer{padding:2rem 0 3rem;border-top:1px solid var(--line);color:var(--muted);font:.9rem/1.6 system-ui,sans-serif;text-align:center}
+dialog{background:var(--surface);color:var(--ink);border:1px solid var(--gold);border-radius:.6rem;padding:0;width:min(30rem,calc(100% - 2rem));max-height:85vh}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+.dhead{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--line)}
+.dhead h2{font-size:1.3rem}
+.close{background:none;border:0;color:var(--ink);font-size:1.5rem;line-height:1}
+.dbody{padding:1rem 1.25rem;overflow:auto;max-height:50vh}
+.line{display:grid;grid-template-columns:1fr auto;gap:.2rem 1rem;padding:.7rem 0;border-bottom:1px solid var(--line)}
+.line .qty{display:flex;align-items:center;gap:.5rem;font-family:system-ui,sans-serif}
+.qty button{width:1.8rem;height:1.8rem;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:.3rem}
+.rm{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:.85rem;font-family:system-ui,sans-serif}
+.dfoot{padding:1rem 1.25rem 1.25rem;border-top:1px solid var(--line);font-family:system-ui,sans-serif}
+.sum{display:flex;justify-content:space-between;margin:.25rem 0}
+.sum.total{font-weight:700;font-size:1.1rem;margin-top:.5rem}
+.free{color:var(--muted);font-size:.9rem;margin:.5rem 0 .9rem}
+.note{color:var(--gold);font-size:.9rem;margin:.75rem 0 0;min-height:1.3rem}
+.empty{color:var(--muted);padding:1rem 0}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap bar">
+  <div class="logo">Zlatý <span>knôt</span></div>
+  <button class="cartbtn" id="open-cart" aria-haspopup="dialog">Košík<b id="count">0</b></button>
+</div></header>
+
+<main class="wrap">
+  <div class="hero">
+    <p class="eyebrow">Ručne vyrábané sviečky</p>
+    <h1>Svetlo, ktoré zmení večer na zážitok.</h1>
+    <p>Sviečky zo sójového vosku s drevenými knôtmi, naliate v malých várkach. Šesť vôní, ktoré vyplnia izbu bez prehnaného parfumu.</p>
+    <a class="btn" href="#produkty">Pozrieť kolekciu</a>
+  </div>
+  <ul class="perks"><li>Sójový vosk</li><li>Drevený knôt</li><li>Doprava zadarmo od 50 €</li><li>Vyrobené v malých várkach</li></ul>
+
+  <section class="block" id="produkty">
+    <h2>Kolekcia</h2>
+    <div class="grid" id="products"></div>
+  </section>
+
+  <section class="block" id="info">
+    <h2>Doprava a starostlivosť</h2>
+    <div class="cols">
+      <div><h3>Doprava</h3><p>Doručenie do 2 až 4 pracovných dní. Pri objednávke nad 50 € je doprava zadarmo.</p></div>
+      <div><h3>Prvé zapálenie</h3><p>Pri prvom použití nechajte sviečku horieť, kým sa vosk neroztopí po celom okraji. Knôt skráťte na 5 mm.</p></div>
+      <div><h3>Darček</h3><p>Každá sviečka sa dodáva v ozdobnej krabičke, pripravená na darovanie.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap">Ukážkový e-shop. Značka, produkty a ceny sú vymyslené a slúžia ako ukážka mojej práce. Objednávky sa nezadávajú a platby nie sú zapojené.</div></footer>
+
+<dialog id="cart" aria-labelledby="cart-title">
+  <div class="dhead"><h2 id="cart-title">Váš košík</h2><button class="close" id="close-cart" aria-label="Zavrieť košík">&times;</button></div>
+  <div class="dbody" id="cart-body"></div>
+  <div class="dfoot">
+    <div class="sum"><span>Medzisúčet</span><span id="sub">0,00 €</span></div>
+    <div class="sum"><span>Doprava</span><span id="ship">0,00 €</span></div>
+    <div class="sum total"><span>Spolu</span><span id="total">0,00 €</span></div>
+    <p class="free" id="free"></p>
+    <button class="btn" id="checkout" style="width:100%">Pokračovať k objednávke</button>
+    <p class="note" id="note" role="status"></p>
+  </div>
+</dialog>
+
+<script>
+const PRODUCTS = [
+  { id: 'santal', name: 'Santalové drevo', notes: 'Santal, jantár, vanilka', price: 24.9, color: '#C9A24B' },
+  { id: 'vanilka', name: 'Vanilka a tonka', notes: 'Vanilka, tonka, karamel', price: 22.9, color: '#E8D2A6' },
+  { id: 'figa', name: 'Figa a cedr', notes: 'Zelená figa, cedrové drevo', price: 26.9, color: '#8FA67A' },
+  { id: 'caj', name: 'Biely čaj', notes: 'Biely čaj, jazmín, citrus', price: 21.9, color: '#D9D4C7' },
+  { id: 'tabak', name: 'Tabak a med', notes: 'Tabak, med, koža', price: 27.9, color: '#A5633A' },
+  { id: 'lipa', name: 'Lipový kvet', notes: 'Lipa, med, zelené listy', price: 19.9, color: '#C8CF7A' }
+];
+const FREE_FROM = 50, SHIPPING = 3.9;
+const eur = new Intl.NumberFormat('sk-SK', { style: 'currency', currency: 'EUR' });
+const $ = id => document.getElementById(id);
+let cart = {};
+try { cart = JSON.parse(localStorage.getItem('zlaty-knot-cart')) || {}; } catch (e) { cart = {}; }
+
+function save() { try { localStorage.setItem('zlaty-knot-cart', JSON.stringify(cart)); } catch (e) {} }
+function candle(c) {
+  return '<svg viewBox="0 0 80 110" aria-hidden="true"><path d="M40 6c7 9 9 14 9 19a9 9 0 0 1-18 0c0-5 2-10 9-19z" fill="#F6C453"/><rect x="38.5" y="30" width="3" height="12" fill="#3a2a1d"/><rect x="12" y="42" width="56" height="60" rx="8" fill="' + c + '"/><rect x="12" y="42" width="56" height="8" rx="4" fill="rgba(0,0,0,.15)"/></svg>';
+}
+function renderProducts() {
+  $('products').innerHTML = PRODUCTS.map(p =>
+    '<article class="card"><div class="pic">' + candle(p.color) + '</div><div class="info"><h3>' + p.name + '</h3>' +
+    '<p class="notes">' + p.notes + '</p><p class="meta">200 g, približne 45 hodín horenia</p>' +
+    '<div class="row"><span class="price">' + eur.format(p.price) + '</span>' +
+    '<button class="add" data-id="' + p.id + '" aria-label="Pridať do košíka: ' + p.name + '">Do košíka</button></div></div></article>'
+  ).join('');
+}
+function totals() {
+  let sub = 0, count = 0;
+  for (const id in cart) { const p = PRODUCTS.find(x => x.id === id); if (p) { sub += p.price * cart[id]; count += cart[id]; } }
+  const ship = count === 0 || sub >= FREE_FROM ? 0 : SHIPPING;
+  return { sub, count, ship, total: sub + ship };
+}
+function renderCart() {
+  const t = totals();
+  $('count').textContent = t.count;
+  $('sub').textContent = eur.format(t.sub);
+  $('ship').textContent = t.count === 0 ? eur.format(0) : (t.ship === 0 ? 'zadarmo' : eur.format(t.ship));
+  $('total').textContent = eur.format(t.total);
+  $('free').textContent = t.count === 0 ? '' : (t.sub >= FREE_FROM ? 'Máte dopravu zadarmo.' : 'Do dopravy zadarmo vám chýba ' + eur.format(FREE_FROM - t.sub) + '.');
+  $('checkout').disabled = t.count === 0;
+  const ids = Object.keys(cart).filter(id => cart[id] > 0 && PRODUCTS.some(p => p.id === id));
+  $('cart-body').innerHTML = ids.length === 0 ? '<p class="empty">Košík je prázdny.</p>' : ids.map(id => {
+    const p = PRODUCTS.find(x => x.id === id);
+    return '<div class="line"><div><strong>' + p.name + '</strong><br><button class="rm" data-rm="' + id + '">Odstrániť</button></div>' +
+      '<div class="qty"><button data-dec="' + id + '" aria-label="Menej">&minus;</button><span>' + cart[id] + '</span><button data-inc="' + id + '" aria-label="Viac">+</button></div>' +
+      '<span>' + eur.format(p.price) + ' / ks</span><span style="text-align:right">' + eur.format(p.price * cart[id]) + '</span></div>';
+  }).join('');
+  save();
+}
+function change(id, delta) {
+  cart[id] = Math.max(0, (cart[id] || 0) + delta);
+  if (cart[id] === 0) delete cart[id];
+  renderCart();
+}
+
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (t.dataset.id) { change(t.dataset.id, 1); $('cart').showModal(); }
+  else if (t.dataset.inc) change(t.dataset.inc, 1);
+  else if (t.dataset.dec) change(t.dataset.dec, -1);
+  else if (t.dataset.rm) { delete cart[t.dataset.rm]; renderCart(); }
+});
+$('open-cart').addEventListener('click', () => $('cart').showModal());
+$('close-cart').addEventListener('click', () => $('cart').close());
+$('cart').addEventListener('click', e => { if (e.target === $('cart')) $('cart').close(); });
+$('checkout').addEventListener('click', () => { $('note').textContent = 'Toto je ukážka. Objednávka sa neodosiela a platba nie je zapojená.'; });
+
+renderProducts();
+renderCart();
+</script>
+</body>
+</html>
